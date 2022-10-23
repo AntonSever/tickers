@@ -1,0 +1,50 @@
+services:
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - db:/var/lib/postgresql/data
+    ports:
+      - '${DB_PORT}:${DB_PORT}'
+
+  updater:
+    build:
+      context: .
+      dockerfile: updater/Dockerfile
+    command: python3 main.py
+    depends_on:
+      - postgres
+    environment:
+      - DB_HOST=postgres
+      - DB_NAME=${DB_NAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+      - DB_TABLE=${DB_TABLE}
+      - DB_USER=${DB_USER}
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: sanic -H 0.0.0.0 -p ${API_PORT} server.sanic_app --access-logs --debug
+    depends_on:
+      - postgres
+    environment:
+      - DB_HOST=postgres
+      - DB_NAME=${DB_NAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+      - DB_TABLE=${DB_TABLE}
+      - DB_USER=${DB_USER}
+    ports:
+      - '${API_PORT}:${API_PORT}'
+
+volumes:
+  db:
+    driver: local
