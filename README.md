@@ -1,3 +1,6 @@
+Skanestas - test assignment solution
+=====================================
+
 The service consists of two components:
 1. **updater** calculates tickers prices once a second and saves these values to the database
 2. **backend** works as a web server for the main page and as an API for receiving data
